@@ -1,0 +1,52 @@
+# Laden der benötigten Pakete
+library(ggplot2)
+library(dplyr)
+library(readr)
+
+# Daten einlesen (Annahme: Daten liegen in CSV-Dateien vor)
+internet_access_data <- read_delim("/Users/Privat/IUBH-Fernstudium/Semester/Semester 6/Statistik /Aufgabe_1/internet_access_csv_2005_2022.csv", delim = ";")
+# Überprüfen, ob "internet_access_data" ein Data Frame ist
+View(internet_access_data)
+class(internet_access_data)
+# Daten als Dataframe umwandeln
+internet_access_data <- as.data.frame(internet_access_data)
+class(internet_access_data)
+
+# Ignoriere die angegebenen Spalte -> Nur noch Land, Jahr und Value bleiben
+internet_access_data <- internet_access_data[, !colnames(internet_access_data) %in% c("INDICATOR", "SUBJECT", "MEASURE", "FREQUENCY", "Flag.Codes")]
+# Daten nach Land und Jahr aufsteigend sortieren
+# internet_access_data <- internet_access_data[order(internet_access_data$LOCATION, internet_access_data$TIME), ]
+class(internet_access_data)
+# Der Datensatz wird durch verschiedene Operationen als Character umgewandelt 
+# Um die Arrange-Funktion zu benutzen, muss allerdings ein Data.frame vorliegen -> convert
+internet_access_data <- as.data.frame(internet_access_data)
+class(internet_access_data)
+View(internet_access_data)
+internet_access_data <- arrange(internet_access_data, LOCATION, TIME)
+# Lücken mit NA markieren
+internet_access_data$Value <- ifelse(is.na(internet_access_data$Value), NA, internet_access_data$Value)
+# Überprüfen, ob "Value" NA-Werte enthält
+any(is.na(internet_access_data$Value))  # Gibt TRUE oder FALSE zurück
+# Loop durch eindeutige Werte in der "LOCATION"-Spalte
+unique_locations <- unique(internet_access_data$LOCATION)
+
+print(unique_locations)
+
+for (country in unique_locations) {
+  # Filtern Sie die Daten für das aktuelle Land
+  filtered_data <- internet_access_data[internet_access_data$LOCATION == country, ]
+  # Erstellen Sie die Zeitreihengrafik für das aktuelle Land
+  plot <- ggplot(data = filtered_data, aes(x = TIME, y = Value)) +
+    geom_line() +
+    labs(title = paste("Internetnutzung in", country),
+         x = "Jahr",
+         y = "Internetnutzung in (%)")
+  
+
+  
+  # Anzeigen der Grafik
+  print(plot)
+  print(country)
+  # Jedes Land als eigenes Plot speichern
+  ggsave(filename = paste("/Users/Privat/IUBH-Fernstudium/Semester/Semester 6/Statistik /Aufgabe_1/Plots Internetnutzung/Internet_Usage_", country, ".png"), plot = plot)
+}
